@@ -1,0 +1,81 @@
+jenkins:
+  systemMessage: "Jenkins skonfigurowany za pomocą Jenkins Configuration as Code"
+  numExecutors: 2
+  mode: NORMAL
+  scmCheckoutRetryCount: 2
+  quietPeriod: 5
+  disableRememberMe: false
+
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "${JENKINS_ADMIN_ID}"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+unclassified:
+  location:
+    url: "${JENKINS_URL:-http://localhost:8080/}"
+    adminAddress: "Jenkins administrator <${JENKINS_ADMIN_EMAIL:-admin@example.com}>"
+
+tool:
+  maven:
+    installations:
+      - name: "Maven 3.9.9"
+        properties:
+          - installSource:
+              installers:
+                - maven:
+                    id: "3.9.9"
+  nodejs:
+    installations:
+      - name: "Node.js 22"
+        properties:
+          - installSource:
+              installers:
+                - nodeJS:
+                    id: "22.14.0"
+  dockerTool:
+    installations:
+      - name: "Docker"
+        properties:
+          - installSource:
+              installers:
+                - docker:
+                    version: "latest"
+
+jobs:
+  - script: |
+      pipelineJob('example-pipeline') {
+        description('Przykładowy pipeline utworzony przez Jenkins Configuration as Code')
+        definition {
+          cps {
+            script('''
+              pipeline {
+                agent any
+                options {
+                  timeout(time: 30, unit: 'MINUTES')
+                  timestamps()
+                }
+                stages {
+                  stage('Build') {
+                    steps {
+                      sh 'echo "Build aplikacji"'
+                    }
+                  }
+                  stage('Test') {
+                    steps {
+                      sh 'echo "Testy aplikacji"'
+                    }
+                  }
+                }
+              }
+            ''')
+            sandbox()
+          }
+        }
+      }
